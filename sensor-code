@@ -23,6 +23,8 @@ sheet = client.open("House Sensor Data").sheet1
 try:
     while True:
         
+        if creds.access_token_expired:
+            gs_client.login()  # refreshes the token
         result = instance.read()
         temp_in_f = str((result.temperature * 9/5) + 32)
         humidity = str(result.humidity)
