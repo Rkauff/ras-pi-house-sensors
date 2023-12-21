@@ -1,0 +1,50 @@
+from datetime import datetime
+import RPi.GPIO as GPIO
+import dht11
+import time
+from pyairtable import Api
+
+airtable_token = ""
+
+api = Api(airtable_token)
+table = api.table('appohYghW8BOH0Kgv', 'tblfmpWCTI3LAOUV7') #app ID and table ID
+
+#print(table.all()) #get all details of all records in a table.
+#print(table.get('recmwQCcuLQPaggpA')) #get the details of a single record in table.
+
+# initialize GPIO
+GPIO.setwarnings(True)
+GPIO.setmode(GPIO.BCM)
+
+# read data using pin 17
+instance = dht11.DHT11(pin=17)
+
+try:
+    while True:
+        
+        result = instance.read()
+        
+        def c_to_f():
+            temp_in_f = str((result.temperature * 9/5) + 32)
+            return temp_in_f
+        
+        if result.is_valid():
+            print("Temperature (F): " + c_to_f())
+            print("Humidity: " + str(result.humidity))
+
+            now = datetime.now()
+            formattedtime = now.strftime("%Y-%m-%d %I:%M:%S %p")
+
+            record = {'Datestamp': formattedtime, 'Temperature': c_to_f(), 'Humidity': str(result.humidity), 'Location': 'Basement'}
+            #table.add_comment('rec4zTM6sdF8l1dda', "Ryan test comment") #to add a comment to a record
+            #table.update('rec4zTM6sdF8l1dda', {'Temperature': '123'}) #to update an existing record
+            #table.delete('rec4zTM6sdF8l1dda') #to delete an existing record
+            table.create(record) #to add a new row (i.e. record)
+        
+        time.sleep(5)
+
+except KeyboardInterrupt:
+    print("Cleanup")
+    GPIO.cleanup()
+Sent 4m ago
+Write to
